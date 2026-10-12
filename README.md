@@ -1,48 +1,146 @@
 # Movie List
 
-SI 669 Week 6 — Team 5. Browse TMDB movies, search by title, inspect a movie, and save favorites to My List.
+SI 669 Week 6 — Team 5. An Expo React Native app for browsing popular movies from The Movie Database (TMDB), searching by title, viewing details, and saving movies to My List.
+
+## Team responsibilities
+
+- **Hao Liu:** repository setup, app shell, navigation, shared types, Query provider, README, process documentation, integration, and final testing.
+- **Ashley Kang:** TMDB integration, movie fetching and search, Browse screen, and request states.
+- **Victor Fang:** shared favorites state, save/remove interactions, and My List.
+
+## Features
+
+- Browse popular movies or search by title.
+- Open movie details with a poster, overview, release year, runtime, up to five cast members, and a YouTube trailer link when available.
+- Save movies from Browse or details; view and remove them in My List.
+- Show loading, error, retry, empty-result, and missing-poster states.
+- Switch between Browse and My List with Expo Router.
 
 ## State management
 
-- **TanStack Query** manages TMDB data, loading and error status, caching, and refetching. Browse requests popular movies or search results. Opening a movie calls `GET /3/movie/{id}?append_to_response=credits,videos`, which returns details, cast, and videos in one request. My List retrieves saved movie details with the same cached query.
-- **Zustand** manages shared client state in three small stores. Each one holds IDs or simple values, never copies of TMDB records. The state lasts while the app is open; persistence across restarts is outside this short build.
-  - `favoritesStore` holds the `favoriteIds` list. Browse, details, My List, and Recent all share it.
-  - `categoryStore` holds the `selectedCategory`: Popular, Now Playing, Top Rated, or Upcoming. Browse shows the category chips, and TanStack Query fetches the matching TMDB list. The category is part of the query key, so each list gets its own cache.
-  - `recentlyViewedStore` holds `recentIds`. The details modal adds a movie every time it opens, from any screen. The newest movie comes first, duplicates move to the top, and the list keeps at most 20 movies. The Recent tab shows the list and can clear it.
+| Tool | Responsibility |
+| --- | --- |
+| **TanStack Query** | TMDB responses, request status, caching, and refetching. Browse uses `['movies', search]`; details and My List share `['movie', id]`. Queries use a five-minute stale time. |
+| **Zustand** | User-created `favoriteIds`, with `addFavorite(id)` and `removeFavorite(id)`. Duplicate IDs are prevented. The store contains IDs, not copies of API responses. |
+| **React local state** | Search input and the movie currently selected for the details modal. |
 
-The Browse and My List screens show loading, error, and empty states. A failed request has a retry button. Missing posters and missing movie details also have fallback text.
+A single Query provider wraps both screens. My List retrieves movie details by saved ID through TanStack Query, so changing the Browse search does not remove saved movies. Favorites are held in memory and reset when the app fully restarts or reloads.
 
-## Get a TMDB credential
+## TMDB endpoints
 
-1. On a desktop browser, create or sign in to a [TMDB account](https://www.themoviedb.org/signup).
-2. Open [Settings → API](https://www.themoviedb.org/settings/api), follow the registration steps, and accept the terms. TMDB says the registration flow is not optimized for mobile browsers.
-3. Copy either the **API Key (v3 auth)** or the longer **API Read Access Token**. The app sends a v3 key as an `api_key` query parameter and a read access token as a Bearer header.
-4. If you do not already have `.env`, copy `.env.example` to `.env`:
+API base URL: `https://api.themoviedb.org/3`.
 
-   ```sh
-   cp .env.example .env
-   ```
+All API requests below use **GET**, include `language=en-US`, and use one of the authentication options described below.
 
-   ```env
-   EXPO_PUBLIC_TMDB_API_KEY=your_actual_v3_api_key
-   ```
+| Endpoint | Query parameters | Used for |
+| --- | --- | --- |
+| `/movie/popular` | `language=en-US` | Browse when the search is empty. |
+| `/search/movie` | `language=en-US`, `query=<search text>`, `include_adult=false` | Title search. Input is trimmed and debounced by 400 ms. |
+| `/movie/{id}` | `language=en-US`, `append_to_response=credits,videos` | Movie details, cast, videos, and records for saved IDs in My List. |
 
-   For an API Read Access Token, use `EXPO_PUBLIC_TMDB_READ_ACCESS_TOKEN=your_token`. The app also recognizes a read access token already saved under `EXPO_PUBLIC_TMDB_API_KEY`, so no rename is required.
+Posters use `https://image.tmdb.org/t/p/w342{poster_path}`. This image URL is separate from the authenticated API endpoints. Missing poster paths display a placeholder. Trailer links open YouTube rather than a TMDB endpoint.
 
-`.env` is ignored by Git. Do not commit or paste your credential into source code. Expo embeds `EXPO_PUBLIC_` values in the app bundle, so this is assignment configuration rather than secure production secret storage.
+Implementation: `src/services/tmdb.ts`. See the [TMDB API guide](https://developer.themoviedb.org/docs/getting-started).
 
-## Run locally
+## Authentication and environment variables
 
-Use Node.js 22.13 or later, then run:
+The app uses **application-level authentication**. Users do not sign into TMDB inside the app, and favorites are local client state rather than a TMDB account watchlist.
+
+Obtain your own credential through [TMDB account API settings](https://www.themoviedb.org/settings/api). Register through a desktop browser if needed. See [TMDB authentication documentation](https://developer.themoviedb.org/docs/authentication-application).
+
+Choose **one** configuration in a local `.env` file at the repository root, next to `package.json`.
+
+### Option A — TMDB v3 API key
+
+```env
+EXPO_PUBLIC_TMDB_API_KEY=replace_with_your_v3_api_key
+```
+
+The app sends this value as the `api_key` query parameter on each TMDB API request.
+
+### Option B — API Read Access Token
+
+```env
+EXPO_PUBLIC_TMDB_READ_ACCESS_TOKEN=replace_with_your_read_access_token
+```
+
+The app sends `Authorization: Bearer <token>`. Enter only the token as the variable value, without the `Bearer ` prefix.
+
+### Variable precedence and compatibility
+
+- A nonempty `EXPO_PUBLIC_TMDB_READ_ACCESS_TOKEN` takes precedence over `EXPO_PUBLIC_TMDB_API_KEY`.
+- Both values are trimmed before use.
+- For backward compatibility, a value in `EXPO_PUBLIC_TMDB_API_KEY` that starts with `eyJ` and contains a dot is treated as a Bearer token. Prefer the explicit token variable for clarity.
+- Restart Expo after adding or changing `.env`; credentials are read when the app is bundled.
+- Without either variable, the app displays a missing-credential error. An invalid credential produces a 401 error message; a rate-limited request produces a 429 message.
+
+All values shown here are placeholders. Never commit real credentials, put them in the process document, or share screenshots containing them. `.env` and `.env.*` are ignored by Git, except the placeholder-only `.env.example`. Expo bundles `EXPO_PUBLIC_` values into the client: these variables are configuration, not production secret storage.
+
+## Setup and running the app
+
+### 1. Prerequisites
+
+- Git and Node.js **22.13 or later** with npm, as required by the project's Expo SDK 57.
+- For phone testing, an Expo Go version compatible with SDK 57. Check [Expo Go availability](https://expo.dev/go) if the installed version reports an SDK mismatch.
+- Your own TMDB API key or API Read Access Token.
+
+### 2. Clone and install
+
+For a new checkout:
 
 ```sh
+git clone https://github.com/haoliusi/Week-6-starter.git
+cd Week-6-starter
 npm ci
+```
+
+If you already have the repository, use your existing checkout and run `npm ci` after pulling dependency changes. Do not run `create-expo-app` again.
+
+### 3. Configure TMDB
+
+If `.env` does not already exist, copy the example:
+
+```sh
+cp .env.example .env
+```
+
+Edit `.env` locally and replace the placeholder using **one** authentication option above. Preserve an existing `.env` rather than overwriting it. No credentials are included in this repository.
+
+### 4. Start Expo
+
+```sh
 npx expo start --clear
 ```
 
-Open the QR code with a compatible Expo Go app or run `npm run web` for a browser preview. Restart Expo after adding or changing `.env`. Without a credential, the app shows a setup error instead of movie results.
+Keep the terminal open. With your phone and computer on the same network, scan the QR code and open the project in compatible Expo Go. If the local connection fails, stop Expo and try:
 
-## Check the app
+```sh
+npx expo start --tunnel
+```
+
+For the browser preview:
+
+```sh
+npm run web
+```
+
+An installed iOS Simulator or configured Android emulator can be launched from the Expo terminal with `i` or `a`, respectively.
+
+## Project structure
+
+```text
+src/app/                          Expo Router routes and navigation
+src/providers/QueryProvider.tsx    Shared Query client and cache
+src/features/browse/              Movie search and Browse screen
+src/features/favorites/           Zustand store and My List screen
+src/services/tmdb.ts              TMDB requests and poster URLs
+src/components/                   Movie cards, details modal, states, credits
+src/types/movie.ts                Movie and favorites interfaces
+```
+
+Expo Router starts from `src/app/_layout.tsx`. The retained starter `App.js` and `index.js` are not the active entry point.
+
+## Validation and manual testing
 
 ```sh
 npm run lint
@@ -50,8 +148,30 @@ npm run typecheck
 npx expo export --platform web
 ```
 
-In the app, browse popular movies, search for a title, open a movie to see its cast and trailer, save it, switch to My List, and remove it. Switch between Browse categories, then open the Recent tab to see the movies you opened, newest first. Try an unlikely search to see the empty state. Temporarily disconnect from the network to see the error and retry states.
+Manual acceptance checklist:
 
-TMDB supplies movie data and images. The in-app Credits section includes an [approved TMDB logo](https://www.themoviedb.org/about/logos-attribution) and the [required notice](https://developer.themoviedb.org/docs/faq).
+- [ ] Start with a valid local credential and see popular movies.
+- [ ] Search for a title and verify matching results.
+- [ ] Search an unlikely title and verify the empty state.
+- [ ] Open details and verify available information and missing-data fallbacks.
+- [ ] Close details in Expo Go; confirm return to the previous screen.
+- [ ] Save a movie, switch to My List, and verify it appears once.
+- [ ] Change the Browse search; confirm the saved movie remains in My List.
+- [ ] Remove the movie and verify both views update.
+- [ ] With the network disconnected, request a previously unqueried title, then reconnect and retry. Cached results may still display, so an already cached query is not a reliable error test.
+- [ ] Fully reload the app and confirm favorites reset, as expected for the current in-memory store.
 
-The starter shell and this implementation were generated with Codex. Teammates should read the code and be prepared to explain both state-management roles and the comments in their own words.
+These checkboxes are a test plan, not a claim that every scenario has passed. Shell checks and browser navigation were verified earlier; live TMDB behavior requires a configured credential. The details close-button adjustment has browser dismissal coverage, but physical Expo Go verification remains pending.
+
+## Current limitations
+
+- Movies only; TV browsing and Recently Viewed are not implemented.
+- Only the first API page is shown; there are no pagination controls.
+- Favorites do not persist across full restarts and are not synchronized to a TMDB account.
+- A phone-specific details Close issue was reported. The current PR includes a modal safe-area and touch-target adjustment; retest on the affected phone before marking it resolved.
+
+## Credits and AI use
+
+TMDB supplies movie data and images. The in-app Credits component includes an [approved TMDB logo](https://www.themoviedb.org/about/logos-attribution) and the notice: “This product uses the TMDB API but is not endorsed or certified by TMDB.” See [TMDB attribution requirements](https://developer.themoviedb.org/docs/faq).
+
+Codex assisted with the scaffold, implementation, troubleshooting, and documentation. Each teammate should review their assigned code, explain the distinction between client and server state, and add comments reflecting their own understanding. Record prompts, decisions, iterations, actual test results, and remaining questions in the team's process document.
