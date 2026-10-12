@@ -1,9 +1,102 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "lastChecked": "2026-10-12",
-  "source": "Michigan Fall Color Reports",
-  "sourceUrl": "https://www.michigan.org/fall-color-reports",
-  "delivery": "bundled-manual-import",
-  "note": "Automated access and reuse permission could not be verified because the report, robots.txt, and terms pages returned a Cloudflare challenge. No current statuses have been imported.",
-  "regions": []
+  "reportPublished": "2026-09-29",
+  "reportTitle": "Fall Color Report: September 29 – October 5, 2026",
+  "source": "MEDC / Pure Michigan Fall Color Report",
+  "sourceUrl": "https://content.govdelivery.com/accounts/MIEDC/bulletins/42cda96",
+  "delivery": "bundled-medc-bulletin-import",
+  "note": "MEDC reports named communities. Marker estimates use the named report location shown in each destination detail and are not park-level observations.",
+  "destinations": [
+    {
+      "id": "sleeping-bear",
+      "region": "Northwest Michigan",
+      "reportLocation": "Crystal Mountain",
+      "percentageRange": "20-40%",
+      "estimatedPeak": "October 7-14",
+      "status": "changing",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "tahquamenon-falls",
+      "region": "Eastern Upper Peninsula",
+      "reportLocation": "Sault Ste. Marie",
+      "percentageRange": "20-40%",
+      "estimatedPeak": "October 11-17",
+      "status": "changing",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "pictured-rocks",
+      "region": "Central Upper Peninsula",
+      "reportLocation": "Munising",
+      "percentageRange": "20-40%",
+      "estimatedPeak": "October 12-20",
+      "status": "changing",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "porcupine-mountains",
+      "region": "Western Upper Peninsula",
+      "reportLocation": "Bond Falls Area",
+      "percentageRange": "40-60%",
+      "estimatedPeak": "September 30 – October 7",
+      "status": "near-peak",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "huron-manistee",
+      "region": "Northern Lower Peninsula",
+      "reportLocation": "Alpena",
+      "percentageRange": "0-20%",
+      "estimatedPeak": "October 7-14",
+      "status": "early",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "hartwick-pines",
+      "region": "North-Central Michigan",
+      "reportLocation": "Grayling",
+      "percentageRange": "0-20%",
+      "estimatedPeak": "October 3-17",
+      "status": "early",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "ludington",
+      "region": "West Michigan",
+      "reportLocation": "Manistee",
+      "percentageRange": "0-20%",
+      "estimatedPeak": "October 16-22",
+      "status": "early",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "kensington",
+      "region": "Southeast Michigan",
+      "reportLocation": "Ann Arbor",
+      "percentageRange": "0-20%",
+      "estimatedPeak": "October 19-23",
+      "status": "early",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "waterloo",
+      "region": "Southern Michigan",
+      "reportLocation": "Ann Arbor",
+      "percentageRange": "0-20%",
+      "estimatedPeak": "October 19-23",
+      "status": "early",
+      "lastUpdated": "2026-09-29"
+    },
+    {
+      "id": "holland",
+      "region": "West Michigan",
+      "reportLocation": "Saugatuck",
+      "percentageRange": "0-20%",
+      "estimatedPeak": "October 20-25",
+      "status": "early",
+      "lastUpdated": "2026-09-29"
+    }
+  ]
 }

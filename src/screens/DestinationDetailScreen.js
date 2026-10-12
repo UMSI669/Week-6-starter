@@ -19,7 +19,7 @@ import { ObservationCard } from '../components/ObservationCard';
 import { PhotoGallery } from '../components/PhotoGallery';
 import { getDestinationById } from '../data/destinations';
 import { useTreeObservations } from '../hooks/useTreeObservations';
-import { getFoliageStatusForRegion } from '../services/foliage';
+import { getFoliageStatusForDestination } from '../services/foliage';
 import { useFallStore } from '../store/useFallStore';
 import { colors, radius, spacing, type } from '../theme/tokens';
 import { openDestinationInMaps } from '../utils/openMaps';
@@ -55,7 +55,7 @@ export default function DestinationDetailScreen() {
   }
 
   const isFavorite = favoriteIds.includes(destination.id);
-  const foliage = getFoliageStatusForRegion(destination.region);
+  const foliage = getFoliageStatusForDestination(destination);
   const photos = data.filter((observation) => observation.photoUrl).slice(0, 6);
   const heroPhoto = photos[0];
 
@@ -113,13 +113,22 @@ export default function DestinationDetailScreen() {
           <View style={styles.sectionHeadingRow}>
             <View style={styles.sectionHeadingCopy}>
               <Text style={styles.sectionTitle}>Estimated Fall Color Status</Text>
-              <Text style={styles.sectionSubtitle}>Regional report for {destination.region}</Text>
+              <Text style={styles.sectionSubtitle}>
+                {foliage.reportLocation
+                  ? `MEDC report for ${foliage.reportLocation}`
+                  : `No MEDC community report matched to ${destination.region}`}
+              </Text>
             </View>
             <FoliageStatusBadge foliage={foliage} />
           </View>
           {foliage.isAvailable ? (
             <View style={styles.reportDetails}>
-              <Text style={styles.reportText}>Updated {formatReportDate(foliage.lastUpdated)}</Text>
+              <Text style={styles.reportText}>
+                {foliage.percentageRange} color · Updated {formatReportDate(foliage.lastUpdated)}
+              </Text>
+              {foliage.estimatedPeak ? (
+                <Text style={styles.reportText}>Estimated peak: {foliage.estimatedPeak}</Text>
+              ) : null}
               <Pressable accessibilityRole="link" onPress={() => Linking.openURL(foliage.sourceUrl)}>
                 <Text style={styles.sourceLink}>Source: {foliage.source}</Text>
               </Pressable>
@@ -128,7 +137,7 @@ export default function DestinationDetailScreen() {
             <View style={styles.unavailableNotice}>
               <Ionicons color={colors.textMuted} name="information-circle-outline" size={20} />
               <View style={styles.unavailableCopy}>
-                <Text style={styles.unavailableText}>Current foliage status unavailable. No report is shown until permitted source data is imported.</Text>
+                <Text style={styles.unavailableText}>MEDC did not publish a matched community estimate for this destination.</Text>
                 <Pressable accessibilityRole="link" onPress={() => Linking.openURL(foliage.sourceUrl)}>
                   <Text style={styles.sourceLink}>Source access checked {formatReportDate(foliage.lastChecked)} · {foliage.source}</Text>
                 </Pressable>

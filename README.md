@@ -61,41 +61,36 @@ A production implementation would require a small authenticated proxy that store
 
 ## Foliage reports and marker colors
 
-Preferred source: [Michigan Fall Color Reports](https://www.michigan.org/fall-color-reports).
+Source: [MEDC / Pure Michigan Fall Color Report](https://content.govdelivery.com/accounts/MIEDC/bulletins/42cda96). MEDC publishes named-community estimates and percentage ranges in a public weekly bulletin hosted by GovDelivery. The update script imports only those factual fields: bulletin date, community, percentage range, and estimated peak window. It does not copy bulletin prose or photos.
 
-On October 12, 2026, automated requests to the report, `robots.txt`, and likely terms pages returned a Cloudflare challenge (`403`). Because automated access and content reuse permission could not be verified, the project does **not** scrape, bypass the challenge, or copy unverified report values.
+`data/foliage-status.json` is a bundled snapshot and is not fetched or cached by TanStack Query. Because MEDC reports communities rather than park boundaries, every marker is explicitly mapped to a nearby reported community. The detail screen names that community and shows the original percentage range so the estimate is not presented as an exact park observation.
 
-`data/foliage-status.json` is a bundled static fallback. It currently contains no regional statuses, so all markers honestly display `Unknown`. Bundled foliage data is not fetched or cached by TanStack Query.
-
-| Normalized status | Marker color |
-|---|---|
-| Early | `#6F9147` |
-| Changing | `#E6B547` |
-| Near Peak | `#E77B32` |
-| Peak | `#B94132` |
-| Past Peak | `#8B6F61` |
-| Unknown | `#8A8A8A` |
+| MEDC percentage | Normalized status | Marker color |
+|---|---|---|
+| 0–20% | Early | `#6F9147` |
+| 20–40% | Changing | `#E6B547` |
+| 40–80% | Near Peak | `#E77B32` |
+| 80–100% | Peak | `#B94132` |
+| Reserved for a future explicit report | Past Peak | `#8B6F61` |
+| Missing report | Unknown | `#8A8A8A` |
 
 Regional reports are labeled as estimates and never as exact park- or tree-level conditions. Missing data always resolves to `unknown`.
 
-### Manual foliage import workflow
+### MEDC foliage import workflow
 
-1. Obtain explicit permission or a permitted structured source.
-2. Copy `data/foliage-status.manual.example.json` to `data/foliage-status.manual.json`.
-3. Enter only verified regional statuses and source publication dates.
-4. Run:
+Run the importer with the newest public MEDC GovDelivery bulletin URL:
 
 ```bash
-npm run foliage:update
+npm run foliage:update -- https://content.govdelivery.com/accounts/MIEDC/bulletins/42cda96
 ```
 
-The validation script accepts only the documented status vocabulary and ISO dates, then writes the bundled `data/foliage-status.json`. The unverified manual working file is ignored by Git. Update frequency should match the source publication schedule; no schedule is claimed while source access remains unverified.
+If no URL is supplied, the script uses the last verified bulletin URL configured in the script. It validates the MEDC host and bulletin format, normalizes the published percentage ranges, and writes `data/foliage-status.json`. Missing named communities remain `Unknown` instead of being fabricated.
 
 ## Project structure
 
 ```text
-data/                 bundled and manual foliage JSON
-scripts/              validated manual foliage import script
+data/                 bundled MEDC foliage JSON
+scripts/              MEDC bulletin import script
 src/app/              Expo Router routes
 src/components/       cards, markers, legend, galleries, controls
 src/data/             curated destinations
@@ -120,7 +115,7 @@ No API key is required for the current Expo Go and iNaturalist workflow. Before 
 
 ## Known limitations
 
-- Current foliage statuses remain unavailable until permitted data is manually imported.
+- Foliage is a bundled snapshot and changes only when the MEDC importer is run.
 - Google Places photos require a secure proxy and are not enabled.
 - iNaturalist imagery represents nearby observations, not guaranteed destination views or current fall color.
 - Favorites, visited status, and distance preference are in memory and reset after a full restart.

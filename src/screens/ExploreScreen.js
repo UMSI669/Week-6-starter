@@ -13,7 +13,7 @@ import { MapCanvas } from '../components/MapCanvas';
 import { SearchBar } from '../components/SearchBar';
 import { destinations } from '../data/destinations';
 import { useTreeObservations } from '../hooks/useTreeObservations';
-import { getFoliageStatusForRegion } from '../services/foliage';
+import { getFoliageStatusForDestination } from '../services/foliage';
 import { useFallStore } from '../store/useFallStore';
 import { colors, radius, shadow, spacing, type } from '../theme/tokens';
 import { calculateDistanceMiles, formatDistance } from '../utils/distance';
@@ -39,7 +39,7 @@ export default function ExploreScreen() {
       destinations.map((destination) => ({
         ...destination,
         distance: calculateDistanceMiles(userLocation, destination),
-        foliage: getFoliageStatusForRegion(destination.region),
+        foliage: getFoliageStatusForDestination(destination),
       })),
     [userLocation]
   );
