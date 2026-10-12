@@ -30,12 +30,8 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# Ignore every .env file and variant
-.env
-.env.*
-
-# Keep the example configuration tracked
-!.env.example
+# local env files
+.env*.local
 
 # typescript
 *.tsbuildinfo
@@ -43,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Keep TMDB credentials local; allow a placeholder template.
+.env
+.env.*
+!.env.example
