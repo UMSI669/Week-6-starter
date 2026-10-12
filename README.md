@@ -1,30 +1,31 @@
 # Movie List
 
-SI 669 Week 6 — Team 5. An Expo React Native app for browsing popular movies from The Movie Database (TMDB), searching by title, viewing details, and saving movies to My List.
+SI 669 Week 6 — Team 5. An Expo React Native app for browsing popular movies from The Movie Database (TMDB), searching by title, viewing details, saving movies to My List, and revisiting recently opened movies.
 
 ## Team responsibilities
 
 - **Hao Liu:** repository setup, app shell, navigation, shared types, Query provider, README, process documentation, integration, and final testing.
 - **Ashley Kang:** TMDB integration, movie fetching and search, Browse screen, and request states.
-- **Victor Fang:** shared favorites state, save/remove interactions, and My List.
+- **Victor Fang:** shared favorites state, save/remove interactions, My List, movie categories, and Recently Viewed.
 
 ## Features
 
-- Browse popular movies or search by title.
+- Browse Popular, Now Playing, Top Rated, or Upcoming movies, or search by title. Search is independent of the selected category; tapping a category clears the search.
 - Open movie details with a poster, overview, release year, runtime, up to five cast members, and a YouTube trailer link when available.
 - Save movies from Browse or details; view and remove them in My List.
 - Show loading, error, retry, empty-result, and missing-poster states.
-- Switch between Browse and My List with Expo Router.
+- Switch between Browse, My List, and Recent with Expo Router.
+- Recent tracks the last 20 unique movies opened, newest first. Reopening a movie moves it to the top. Clear removes the history without changing favorites.
 
 ## State management
 
 | Tool | Responsibility |
 | --- | --- |
-| **TanStack Query** | TMDB responses, request status, caching, and refetching. Browse uses `['movies', search]`; details and My List share `['movie', id]`. Queries use a five-minute stale time. |
-| **Zustand** | User-created `favoriteIds`, with `addFavorite(id)` and `removeFavorite(id)`. Duplicate IDs are prevented. The store contains IDs, not copies of API responses. |
+| **TanStack Query** | TMDB responses, request status, caching, and refetching. Browse uses `['movies', 'category', selectedCategory]` or `['movies', 'search', search]`; details, My List, and Recent share `['movie', id]`. Queries use a five-minute stale time. |
+| **Zustand** | Three stores hold favorites (`favoriteIds`, add/remove), category selection (`selectedCategory`, `setCategory`), and history (`recentIds`, add/remove/clear). Favorites and history store unique IDs, not copies of API responses. |
 | **React local state** | Search input and the movie currently selected for the details modal. |
 
-A single Query provider wraps both screens. My List retrieves movie details by saved ID through TanStack Query, so changing the Browse search does not remove saved movies. Favorites are held in memory and reset when the app fully restarts or reloads.
+A single Query provider wraps all three screens. My List retrieves movie details by saved ID through TanStack Query, so changing the Browse search does not remove saved movies. Favorites, recent history, and category selection are held in memory. A full restart or reload clears favorites/history and resets the category to Popular. History records opening details, even if the detail request fails. The history store also exposes `removeRecentlyViewed(id)`; the current UI offers Clear for the whole history.
 
 ## TMDB endpoints
 
@@ -34,9 +35,12 @@ All API requests below use **GET**, include `language=en-US`, and use one of the
 
 | Endpoint | Query parameters | Used for |
 | --- | --- | --- |
-| `/movie/popular` | `language=en-US` | Browse when the search is empty. |
+| `/movie/popular` | `language=en-US` | Popular category (default). |
+| `/movie/now_playing` | `language=en-US` | Now Playing category. |
+| `/movie/top_rated` | `language=en-US` | Top Rated category. |
+| `/movie/upcoming` | `language=en-US` | Upcoming category. |
 | `/search/movie` | `language=en-US`, `query=<search text>`, `include_adult=false` | Title search. Input is trimmed and debounced by 400 ms. |
-| `/movie/{id}` | `language=en-US`, `append_to_response=credits,videos` | Movie details, cast, videos, and records for saved IDs in My List. |
+| `/movie/{id}` | `language=en-US`, `append_to_response=credits,videos` | Movie details, cast, videos, and records for saved IDs in My List and viewed IDs in Recent. |
 
 Posters use `https://image.tmdb.org/t/p/w342{poster_path}`. This image URL is separate from the authenticated API endpoints. Missing poster paths display a placeholder. Trailer links open YouTube rather than a TMDB endpoint.
 
@@ -109,13 +113,22 @@ Edit `.env` locally and replace the placeholder using **one** authentication opt
 ### 4. Start Expo
 
 ```sh
-npx expo start --clear
+npx expo start --go --clear
 ```
+
+If Expo Go requires sign-in, sign into the same Expo account on your phone and computer:
+
+```sh
+npx expo login
+npx expo whoami
+```
+
+For an organization SSO account, use `npx expo login --sso` instead and complete the browser sign-in. Restart Expo after login, then scan the new QR code. See [Expo SSO instructions](https://docs.expo.dev/accounts/sso/).
 
 Keep the terminal open. With your phone and computer on the same network, scan the QR code and open the project in compatible Expo Go. If the local connection fails, stop Expo and try:
 
 ```sh
-npx expo start --tunnel
+npx expo start --go --tunnel
 ```
 
 For the browser preview:
@@ -131,11 +144,12 @@ An installed iOS Simulator or configured Android emulator can be launched from t
 ```text
 src/app/                          Expo Router routes and navigation
 src/providers/QueryProvider.tsx    Shared Query client and cache
-src/features/browse/              Movie search and Browse screen
-src/features/favorites/           Zustand store and My List screen
+src/features/browse/              Browse, category definitions/store, and search
+src/features/favorites/           Favorites store and My List screen
+src/features/recent/              Recent history store and Recently Viewed screen
 src/services/tmdb.ts              TMDB requests and poster URLs
 src/components/                   Movie cards, details modal, states, credits
-src/types/movie.ts                Movie and favorites interfaces
+src/types/movie.ts                Movie, favorites, category, and history interfaces
 ```
 
 Expo Router starts from `src/app/_layout.tsx`. The retained starter `App.js` and `index.js` are not the active entry point.
@@ -151,7 +165,8 @@ npx expo export --platform web
 Manual acceptance checklist:
 
 - [ ] Start with a valid local credential and see popular movies.
-- [ ] Search for a title and verify matching results.
+- [ ] Switch through all four categories and verify the selected label and results.
+- [ ] Search for a title and verify matching results; tap a category and confirm search clears.
 - [ ] Search an unlikely title and verify the empty state.
 - [ ] Open details and verify available information and missing-data fallbacks.
 - [ ] Close details in Expo Go; confirm return to the previous screen.
@@ -159,16 +174,21 @@ Manual acceptance checklist:
 - [ ] Change the Browse search; confirm the saved movie remains in My List.
 - [ ] Remove the movie and verify both views update.
 - [ ] With the network disconnected, request a previously unqueried title, then reconnect and retry. Cached results may still display, so an already cached query is not a reliable error test.
-- [ ] Fully reload the app and confirm favorites reset, as expected for the current in-memory store.
+- [ ] Open movies from Browse and My List; verify Recent displays them newest first.
+- [ ] Reopen a movie from Recent; verify it moves to the top without a duplicate.
+- [ ] Open more than 20 distinct movies and verify history retains only the latest 20.
+- [ ] Save/remove a movie from Recent and verify My List updates.
+- [ ] Clear Recent and verify its empty state while favorites remain unchanged.
+- [ ] Fully reload the app and confirm favorites/history reset and Popular is selected.
 
 These checkboxes are a test plan, not a claim that every scenario has passed. Shell checks and browser navigation were verified earlier; live TMDB behavior requires a configured credential. The details close-button adjustment has browser dismissal coverage, but physical Expo Go verification remains pending.
 
 ## Current limitations
 
-- Movies only; TV browsing and Recently Viewed are not implemented.
+- Movies only; TV browsing is not implemented. Categories are TMDB movie lists, not genre filters.
 - Only the first API page is shown; there are no pagination controls.
-- Favorites do not persist across full restarts and are not synchronized to a TMDB account.
-- A phone-specific details Close issue was reported. The current PR includes a modal safe-area and touch-target adjustment; retest on the affected phone before marking it resolved.
+- Favorites and recent history do not persist across full restarts and are not synchronized to a TMDB account.
+- A phone-specific details Close issue was reported. A modal safe-area and touch-target adjustment was merged in PR #3, but the user subsequently reported the issue still occurring. Resolution is not confirmed; retest the latest code on the affected phone.
 
 ## Credits and AI use
 
