@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Michigan Fall Finder",
+    "slug": "michigan-fall-finder",
+    "scheme": "michiganfallfinder",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FAF7F0",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Michigan Fall Finder to use your location to calculate distances to destinations."
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
