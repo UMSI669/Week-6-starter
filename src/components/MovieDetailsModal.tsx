@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavoritesStore } from '../features/favorites/favoritesStore';
+import { useRecentlyViewedStore } from '../features/recent/recentlyViewedStore';
 import { getMovieDetails, posterUrl } from '../services/tmdb';
 import { StateMessage } from './StateMessage';
 
@@ -11,6 +13,13 @@ export function MovieDetailsModal({ movieId, onClose }: Props) {
   const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
   const addFavorite = useFavoritesStore((state) => state.addFavorite);
   const removeFavorite = useFavoritesStore((state) => state.removeFavorite);
+  const addRecentlyViewed = useRecentlyViewedStore((state) => state.addRecentlyViewed);
+
+  // Opening a movie from any screen records it in the shared Recently Viewed list.
+  useEffect(() => {
+    if (movieId !== null) addRecentlyViewed(movieId);
+  }, [movieId, addRecentlyViewed]);
+
   const details = useQuery({
     queryKey: ['movie', movieId],
     queryFn: ({ signal }) => getMovieDetails(movieId!, signal),

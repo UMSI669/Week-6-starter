@@ -5,7 +5,10 @@ SI 669 Week 6 — Team 5. Browse TMDB movies, search by title, inspect a movie, 
 ## State management
 
 - **TanStack Query** manages TMDB data, loading and error status, caching, and refetching. Browse requests popular movies or search results. Opening a movie calls `GET /3/movie/{id}?append_to_response=credits,videos`, which returns details, cast, and videos in one request. My List retrieves saved movie details with the same cached query.
-- **Zustand** manages the user-created `favoriteIds` list. Browse, details, and My List share it. The store contains IDs rather than copies of TMDB movie records. Favorites last while the app is open; persistence across restarts is outside this short build.
+- **Zustand** manages shared client state in three small stores. Each one holds IDs or simple values, never copies of TMDB records. The state lasts while the app is open; persistence across restarts is outside this short build.
+  - `favoritesStore` holds the `favoriteIds` list. Browse, details, My List, and Recent all share it.
+  - `categoryStore` holds the `selectedCategory`: Popular, Now Playing, Top Rated, or Upcoming. Browse shows the category chips, and TanStack Query fetches the matching TMDB list. The category is part of the query key, so each list gets its own cache.
+  - `recentlyViewedStore` holds `recentIds`. The details modal adds a movie every time it opens, from any screen. The newest movie comes first, duplicates move to the top, and the list keeps at most 20 movies. The Recent tab shows the list and can clear it.
 
 The Browse and My List screens show loading, error, and empty states. A failed request has a retry button. Missing posters and missing movie details also have fallback text.
 
@@ -47,7 +50,7 @@ npm run typecheck
 npx expo export --platform web
 ```
 
-In the app, browse popular movies, search for a title, open a movie to see its cast and trailer, save it, switch to My List, and remove it. Try an unlikely search to see the empty state. Temporarily disconnect from the network to see the error and retry states.
+In the app, browse popular movies, search for a title, open a movie to see its cast and trailer, save it, switch to My List, and remove it. Switch between Browse categories, then open the Recent tab to see the movies you opened, newest first. Try an unlikely search to see the empty state. Temporarily disconnect from the network to see the error and retry states.
 
 TMDB supplies movie data and images. The in-app Credits section includes an [approved TMDB logo](https://www.themoviedb.org/about/logos-attribution) and the [required notice](https://developer.themoviedb.org/docs/faq).
 

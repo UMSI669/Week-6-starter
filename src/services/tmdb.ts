@@ -1,4 +1,5 @@
-import type { Movie, MovieDetails } from '../types/movie';
+import { MOVIE_CATEGORIES } from '../features/browse/categories';
+import type { Movie, MovieCategory, MovieDetails } from '../types/movie';
 
 const API_BASE = 'https://api.themoviedb.org/3';
 const READ_ACCESS_TOKEN = process.env.EXPO_PUBLIC_TMDB_READ_ACCESS_TOKEN?.trim();
@@ -29,11 +30,12 @@ async function request<T>(path: string, params: Record<string, string> = {}, sig
   return response.json() as Promise<T>;
 }
 
-export function getMovies(search: string, signal?: AbortSignal): Promise<MoviePage> {
+export function getMovies(search: string, category: MovieCategory, signal?: AbortSignal): Promise<MoviePage> {
   const query = search.trim();
-  return query
-    ? request<MoviePage>('/search/movie', { query, include_adult: 'false' }, signal)
-    : request<MoviePage>('/movie/popular', {}, signal);
+  if (query) return request<MoviePage>('/search/movie', { query, include_adult: 'false' }, signal);
+  // With no search text, show the TMDB list for the selected category.
+  const path = MOVIE_CATEGORIES.find((item) => item.id === category)?.path ?? '/movie/popular';
+  return request<MoviePage>(path, {}, signal);
 }
 
 export function getMovieDetails(id: number, signal?: AbortSignal): Promise<MovieDetails> {

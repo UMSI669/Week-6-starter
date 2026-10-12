@@ -19,3 +19,17 @@ export type FavoritesState = {
   addFavorite: (id: number) => void;
   removeFavorite: (id: number) => void;
 };
+
+export type MovieCategory = 'popular' | 'now_playing' | 'top_rated' | 'upcoming';
+
+export type CategoryState = {
+  selectedCategory: MovieCategory;
+  setCategory: (category: MovieCategory) => void;
+};
+
+export type RecentlyViewedState = {
+  recentIds: number[];
+  addRecentlyViewed: (id: number) => void;
+  removeRecentlyViewed: (id: number) => void;
+  clearRecentlyViewed: () => void;
+};
