@@ -20,7 +20,12 @@ export function ObservationCard({ observation }) {
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       {observation.photoUrl ? (
-        <Image accessibilityIgnoresInvertColors source={{ uri: observation.photoUrl }} style={styles.image} />
+        <Image
+          accessibilityIgnoresInvertColors
+          resizeMode="cover"
+          source={{ uri: observation.photoUrl }}
+          style={styles.image}
+        />
       ) : (
         <View style={styles.imageFallback}>
           <Ionicons color={colors.forest} name="leaf-outline" size={28} />
@@ -35,18 +40,24 @@ export function ObservationCard({ observation }) {
             {observation.scientificName}
           </Text>
         ) : null}
-        <Text style={styles.date}>{formattedDate}</Text>
+        <Text style={styles.date}>Observed: {formattedDate}</Text>
+        {observation.photoAttribution ? (
+          <Text numberOfLines={2} style={styles.attribution}>
+            {observation.photoAttribution}
+          </Text>
+        ) : null}
       </View>
-      <Ionicons color={colors.primary} name="open-outline" size={20} />
+      <View style={styles.openIcon}>
+        <Ionicons color={colors.surface} name="open-outline" size={18} />
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    width: 224,
+    overflow: 'hidden',
     padding: spacing.md,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -54,21 +65,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
   },
   image: {
-    width: 72,
-    height: 72,
+    width: '100%',
+    height: 136,
     backgroundColor: colors.cream,
     borderRadius: radius.button,
   },
   imageFallback: {
-    width: 72,
-    height: 72,
+    width: '100%',
+    height: 136,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.successSurface,
     borderRadius: radius.button,
   },
   copy: {
-    flex: 1,
+    marginTop: spacing.md,
     gap: 2,
   },
   title: {
@@ -85,6 +96,23 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     color: colors.textMuted,
     fontSize: type.label,
+  },
+  attribution: {
+    marginTop: spacing.xs,
+    color: colors.textMuted,
+    fontSize: type.label,
+    lineHeight: 16,
+  },
+  openIcon: {
+    position: 'absolute',
+    top: spacing.lg,
+    right: spacing.lg,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 18,
   },
   pressed: {
     opacity: 0.75,

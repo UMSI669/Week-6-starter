@@ -29,6 +29,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "foliage:update": "node scripts/updateFoliageData.js",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },

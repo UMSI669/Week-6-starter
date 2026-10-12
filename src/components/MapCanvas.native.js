@@ -44,7 +44,10 @@ export const MapCanvas = forwardRef(function MapCanvas(
           key={destination.id}
           onPress={() => onSelectDestination(destination)}
         >
-          <DestinationMarker selected={destination.id === selectedDestinationId} />
+          <DestinationMarker
+            selected={destination.id === selectedDestinationId}
+            status={destination.foliage?.value}
+          />
         </Marker>
       ))}
     </MapView>

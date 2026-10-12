@@ -2,14 +2,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
 import { colors, shadow } from '../theme/tokens';
+import { getFoliageAppearance } from '../utils/foliageColors';
 
-export function DestinationMarker({ selected }) {
+export function DestinationMarker({ selected, status = 'unknown' }) {
+  const foliage = getFoliageAppearance(status);
+
   return (
     <View style={styles.shell}>
-      <View style={[styles.pin, selected && styles.pinSelected]}>
+      <View
+        style={[
+          styles.pin,
+          { backgroundColor: foliage.color },
+          selected && styles.pinSelected,
+        ]}
+      >
         <Ionicons color={colors.surface} name="leaf" size={selected ? 24 : 20} />
       </View>
-      <View style={[styles.point, selected && styles.pointSelected]} />
+      <View
+        style={[
+          styles.point,
+          { borderColor: foliage.color },
+          selected && styles.pointSelected,
+        ]}
+      />
     </View>
   );
 }
@@ -25,7 +40,7 @@ const styles = StyleSheet.create({
     height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.foliageUnknown,
     borderWidth: 3,
     borderColor: colors.surface,
     borderRadius: 22,
@@ -35,7 +50,7 @@ const styles = StyleSheet.create({
   pinSelected: {
     width: 48,
     height: 48,
-    backgroundColor: colors.primaryDark,
+    borderWidth: 4,
   },
   point: {
     width: 10,
@@ -43,10 +58,10 @@ const styles = StyleSheet.create({
     marginTop: -2,
     backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: colors.primary,
+    borderColor: colors.foliageUnknown,
     borderRadius: 5,
   },
   pointSelected: {
-    borderColor: colors.primaryDark,
+    borderWidth: 3,
   },
 });

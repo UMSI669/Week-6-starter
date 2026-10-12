@@ -55,7 +55,10 @@ export const MapCanvas = forwardRef(function MapCanvas(
             pressed && styles.markerPressed,
           ]}
         >
-          <DestinationMarker selected={destination.id === selectedDestinationId} />
+          <DestinationMarker
+            selected={destination.id === selectedDestinationId}
+            status={destination.foliage?.value}
+          />
         </Pressable>
       ))}
 

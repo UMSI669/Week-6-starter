@@ -2,18 +2,22 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DestinationCard } from '../components/DestinationCard';
 import { DistanceFilter } from '../components/DistanceFilter';
+import { FoliageLegend } from '../components/FoliageLegend';
 import { IconButton } from '../components/IconButton';
+import { LocationPreviewCard } from '../components/LocationPreviewCard';
 import { MapCanvas } from '../components/MapCanvas';
 import { SearchBar } from '../components/SearchBar';
 import { destinations } from '../data/destinations';
+import { useTreeObservations } from '../hooks/useTreeObservations';
+import { getFoliageStatusForRegion } from '../services/foliage';
 import { useFallStore } from '../store/useFallStore';
 import { colors, radius, shadow, spacing, type } from '../theme/tokens';
 import { calculateDistanceMiles, formatDistance } from '../utils/distance';
+import { openDestinationInMaps } from '../utils/openMaps';
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
@@ -35,6 +39,7 @@ export default function ExploreScreen() {
       destinations.map((destination) => ({
         ...destination,
         distance: calculateDistanceMiles(userLocation, destination),
+        foliage: getFoliageStatusForRegion(destination.region),
       })),
     [userLocation]
   );
@@ -55,6 +60,8 @@ export default function ExploreScreen() {
   const selectedDestination =
     visibleDestinations.find((destination) => destination.id === selectedId) ||
     visibleDestinations[0];
+  const previewObservations = useTreeObservations(selectedDestination);
+  const previewPhoto = previewObservations.data?.find((observation) => observation.photoUrl);
 
   async function requestCurrentLocation() {
     setIsLocating(true);
@@ -78,7 +85,6 @@ export default function ExploreScreen() {
       };
 
       setUserLocation(coordinates);
-      setLocationMessage('Showing distances from your current location.');
       mapRef.current?.animateToRegion(
         { ...coordinates, latitudeDelta: 1.5, longitudeDelta: 1.5 },
         700
@@ -108,6 +114,14 @@ export default function ExploreScreen() {
     setFilterVisible(false);
   }
 
+  async function openSelectedDestinationInMaps() {
+    try {
+      await openDestinationInMaps(selectedDestination);
+    } catch {
+      Alert.alert('Unable to open Maps', 'Please try again from the destination details screen.');
+    }
+  }
+
   return (
     <View style={styles.screen}>
       <MapCanvas
@@ -122,7 +136,7 @@ export default function ExploreScreen() {
         <View style={styles.brandRow}>
           <View style={styles.brandCopy}>
             <View style={styles.brandTitleRow}>
-              <Ionicons color={colors.primary} name="leaf" size={28} />
+              <Ionicons color={colors.primary} name="leaf" size={24} />
               <Text style={styles.brandTitle}>Michigan Fall Finder</Text>
             </View>
             <Text style={styles.tagline}>Find your next autumn adventure.</Text>
@@ -150,6 +164,10 @@ export default function ExploreScreen() {
         ) : null}
       </View>
 
+      <View pointerEvents="none" style={[styles.legendPosition, { top: insets.top + 132 }]}>
+        <FoliageLegend />
+      </View>
+
       <View pointerEvents="box-none" style={styles.bottomOverlay}>
         {visibleDestinations.length === 0 ? (
           <View style={styles.noResultsCard}>
@@ -160,12 +178,16 @@ export default function ExploreScreen() {
             </View>
           </View>
         ) : selectedDestination ? (
-          <DestinationCard
+          <LocationPreviewCard
             destination={selectedDestination}
             distanceLabel={formatDistance(selectedDestination.distance)}
+            foliage={selectedDestination.foliage}
+            imageUrl={previewPhoto?.photoUrl}
             isFavorite={favoriteIds.includes(selectedDestination.id)}
-            onDetailsPress={() => router.push(`/destination/${selectedDestination.id}`)}
+            isImageLoading={previewObservations.isLoading}
             onFavoritePress={() => toggleFavorite(selectedDestination.id)}
+            onLocationPress={openSelectedDestinationInMaps}
+            onPress={() => router.push(`/destination/${selectedDestination.id}`)}
           />
         ) : null}
         <View style={styles.resultsPill}>
@@ -201,10 +223,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
-    backgroundColor: 'rgba(250, 247, 240, 0.90)',
+    backgroundColor: colors.headerOverlay,
   },
   brandRow: {
-    minHeight: 52,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -221,7 +243,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     flexShrink: 1,
     color: colors.primaryDark,
-    fontSize: type.title,
+    fontSize: type.heading,
     fontWeight: '800',
   },
   tagline: {
@@ -229,6 +251,10 @@ const styles = StyleSheet.create({
     color: colors.forest,
     fontSize: type.label,
     fontWeight: '600',
+  },
+  legendPosition: {
+    position: 'absolute',
+    left: spacing.lg,
   },
   messagePill: {
     alignSelf: 'flex-start',

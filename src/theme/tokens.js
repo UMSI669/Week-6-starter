@@ -10,11 +10,18 @@ export const colors = {
   border: '#E9E2D7',
   successSurface: '#E8F0E8',
   warningSurface: '#FFF2D8',
+  headerOverlay: 'rgba(250, 247, 240, 0.92)',
   mapLand: '#EEF0DF',
   mapPark: '#D5E4C4',
   mapWater: '#B8DDE6',
   mapRoad: '#FFFFFF',
   mapLabel: '#5B7052',
+  foliageEarly: '#6F9147',
+  foliageChanging: '#E6B547',
+  foliageNearPeak: '#E77B32',
+  foliagePeak: '#B94132',
+  foliagePastPeak: '#8B6F61',
+  foliageUnknown: '#8A8A8A',
   scrim: 'rgba(51, 43, 37, 0.42)',
   shadow: '#332B25',
 };
@@ -31,6 +38,7 @@ export const spacing = {
 export const radius = {
   button: 12,
   card: 16,
+  preview: 20,
   pill: 28,
 };
 

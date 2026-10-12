@@ -20,13 +20,13 @@ export function DestinationCard({
           <Ionicons color={colors.surface} name="leaf" size={30} />
         </View>
         <View style={styles.content}>
-          <Text numberOfLines={2} style={styles.title}>
-            {destination.shortName}
+          <Text style={styles.title}>
+            {destination.name}
           </Text>
           <View style={styles.metaRow}>
             <Ionicons color={colors.textMuted} name="location" size={15} />
             <Text numberOfLines={1} style={styles.meta}>
-              {destination.region}{distanceLabel ? `  ·  ${distanceLabel}` : ''}
+              {destination.city}, Michigan{distanceLabel ? `  ·  ${distanceLabel}` : ''}
             </Text>
           </View>
         </View>

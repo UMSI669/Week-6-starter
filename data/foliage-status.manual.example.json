@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "lastChecked": "YYYY-MM-DD",
+  "source": "Michigan Fall Color Reports",
+  "sourceUrl": "https://www.michigan.org/fall-color-reports",
+  "delivery": "bundled-manual-import",
+  "note": "Replace this note with how permission and values were verified.",
+  "regions": []
+}

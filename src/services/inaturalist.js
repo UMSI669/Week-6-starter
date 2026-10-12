@@ -22,15 +22,33 @@ export async function fetchTreeObservations({ latitude, longitude, radius = 25 }
 
   const payload = await response.json();
 
-  return payload.results.map((observation) => ({
-    id: observation.id,
-    speciesName:
-      observation.taxon?.preferred_common_name ||
-      observation.taxon?.name ||
-      'Maple observation',
-    scientificName: observation.taxon?.name,
-    observedOn: observation.observed_on,
-    photoUrl: observation.photos?.[0]?.url?.replace('square', 'medium') || null,
-    observationUrl: observation.uri || `https://www.inaturalist.org/observations/${observation.id}`,
-  }));
+  return payload.results
+    .map((observation) => {
+      const photo = observation.photos?.[0];
+      const coordinates = observation.geojson?.coordinates;
+
+      return {
+        id: observation.id,
+        speciesName:
+          observation.taxon?.preferred_common_name ||
+          observation.taxon?.name ||
+          'Maple observation',
+        scientificName: observation.taxon?.name,
+        observedOn: observation.observed_on,
+        coordinates: coordinates
+          ? { latitude: coordinates[1], longitude: coordinates[0] }
+          : null,
+        photoUrl: photo?.url?.replace('square', 'medium') || null,
+        photoAttribution: photo?.attribution || null,
+        photoLicense: photo?.license_code || null,
+        observer: observation.user?.login || null,
+        observationUrl:
+          observation.uri || `https://www.inaturalist.org/observations/${observation.id}`,
+      };
+    })
+    .sort((first, second) => {
+      if (!first.observedOn) return 1;
+      if (!second.observedOn) return -1;
+      return second.observedOn.localeCompare(first.observedOn);
+    });
 }
