@@ -1,0 +1,20 @@
+{
+  "name": "week-6-starter",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@tanstack/react-query": "^5.104.2",
+    "expo": "~57.0.27",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "zustand": "^5.0.15"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
