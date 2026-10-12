@@ -3,9 +3,17 @@ export type Movie = {
   title: string;
   poster_path: string | null;
   release_date?: string;
+  overview?: string;
 };
 
-// AI-written: Agreed contract: Victor implements it and Ashley consumes it.
+export type MovieDetails = Movie & {
+  overview: string;
+  runtime: number | null;
+  credits: { cast: { id: number; name: string; character: string }[] };
+  videos: { results: { id: string; key: string; name: string; site: string; type: string }[] };
+};
+
+// User-created state contains IDs only; TMDB data stays in TanStack Query's cache.
 export type FavoritesState = {
   favoriteIds: number[];
   addFavorite: (id: number) => void;
