@@ -1,0 +1,98 @@
+// Coordinates were verified with OpenStreetMap Nominatim on October 12, 2026.
+// Large parks use a named visitor destination or a representative park location.
+export const destinations = [
+  {
+    id: 'sleeping-bear',
+    name: 'Sleeping Bear Dunes National Lakeshore',
+    shortName: 'Sleeping Bear Dunes',
+    region: 'Northwest Michigan',
+    latitude: 44.9309354,
+    longitude: -85.8983834,
+    description: 'Lake Michigan overlooks, wooded trails, and towering dunes make this one of Michigan’s most memorable autumn drives.',
+  },
+  {
+    id: 'tahquamenon-falls',
+    name: 'Tahquamenon Falls State Park',
+    shortName: 'Tahquamenon Falls',
+    region: 'Eastern Upper Peninsula',
+    latitude: 46.5748174,
+    longitude: -85.256778,
+    description: 'Copper-colored waterfalls are surrounded by northern hardwood forest near the park’s Upper Falls.',
+  },
+  {
+    id: 'pictured-rocks',
+    name: 'Pictured Rocks National Lakeshore',
+    shortName: 'Pictured Rocks',
+    region: 'Central Upper Peninsula',
+    latitude: 46.4237239,
+    longitude: -86.6238153,
+    description: 'Colorful cliffs, waterfalls, and maple-lined trails meet Lake Superior near the Munising Falls access point.',
+  },
+  {
+    id: 'porcupine-mountains',
+    name: 'Porcupine Mountains Wilderness State Park',
+    shortName: 'Porcupine Mountains',
+    region: 'Western Upper Peninsula',
+    latitude: 46.8149222,
+    longitude: -89.6247045,
+    description: 'Old-growth forest, rugged ridges, and sweeping wilderness views surround the park visitor center.',
+  },
+  {
+    id: 'huron-manistee',
+    name: 'Huron-Manistee National Forests',
+    shortName: 'Huron-Manistee Forests',
+    region: 'Northern Lower Peninsula',
+    latitude: 44.4352861,
+    longitude: -83.6241315,
+    description: 'A broad national forest landscape with scenic river overlooks, represented here by Lumberman’s Monument.',
+  },
+  {
+    id: 'hartwick-pines',
+    name: 'Hartwick Pines State Park',
+    shortName: 'Hartwick Pines',
+    region: 'North-Central Michigan',
+    latitude: 44.7441043,
+    longitude: -84.6692504,
+    description: 'Towering old-growth pines contrast with the warm colors of the surrounding hardwood forest.',
+  },
+  {
+    id: 'ludington',
+    name: 'Ludington State Park',
+    shortName: 'Ludington State Park',
+    region: 'West Michigan',
+    latitude: 44.0371829,
+    longitude: -86.5025885,
+    description: 'Dunes, forest, marshes, and Lake Michigan shoreline create a varied autumn day trip.',
+  },
+  {
+    id: 'kensington',
+    name: 'Kensington Metropark',
+    shortName: 'Kensington Metropark',
+    region: 'Southeast Michigan',
+    latitude: 42.5552371,
+    longitude: -83.632025,
+    description: 'Wooded trails and Kent Lake offer an accessible fall escape close to Metro Detroit.',
+  },
+  {
+    id: 'waterloo',
+    name: 'Waterloo Recreation Area',
+    shortName: 'Waterloo Recreation Area',
+    region: 'Southern Michigan',
+    latitude: 42.3386763,
+    longitude: -84.1341173,
+    description: 'Rolling glacial terrain, inland lakes, and mixed forest fill Michigan’s largest state recreation area.',
+  },
+  {
+    id: 'holland',
+    name: 'Holland State Park',
+    shortName: 'Holland State Park',
+    region: 'West Michigan',
+    latitude: 42.7796806,
+    longitude: -86.2015017,
+    description: 'A Lake Michigan destination that pairs beach views with nearby autumn drives through West Michigan.',
+  },
+];
+
+export function getDestinationById(id) {
+  return destinations.find((destination) => destination.id === id);
+}
