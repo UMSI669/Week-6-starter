@@ -17,19 +17,8 @@ export function LocationPreviewCard({
 }) {
   const locationLabel = `${destination.city}, Michigan${distanceLabel ? ` · ${distanceLabel}` : ''}`;
 
-  function stopAndRun(event, action) {
-    event.stopPropagation();
-    action();
-  }
-
   return (
-    <Pressable
-      accessibilityHint="Opens destination details"
-      accessibilityLabel={`${destination.name}, ${locationLabel}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-    >
+    <View style={styles.card}>
       <View style={styles.imageShell}>
         {imageUrl ? (
           <Image
@@ -52,14 +41,22 @@ export function LocationPreviewCard({
 
       <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>{destination.name}</Text>
+          <Pressable
+            accessibilityHint="Opens destination details"
+            accessibilityLabel={`Open ${destination.name} details`}
+            accessibilityRole="button"
+            onPress={onPress}
+            style={({ pressed }) => [styles.titleButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.title}>{destination.name}</Text>
+          </Pressable>
           <Pressable
             accessibilityLabel={isFavorite ? 'Remove from saved destinations' : 'Save destination'}
             accessibilityRole="button"
             accessibilityState={{ selected: isFavorite }}
             hitSlop={8}
-            onPress={(event) => stopAndRun(event, onFavoritePress)}
-            style={styles.bookmarkButton}
+            onPress={onFavoritePress}
+            style={({ pressed }) => [styles.bookmarkButton, pressed && styles.pressed]}
           >
             <Ionicons
               color={colors.primary}
@@ -72,19 +69,27 @@ export function LocationPreviewCard({
         <Pressable
           accessibilityHint="Opens this destination in Maps"
           accessibilityRole="link"
-          onPress={(event) => stopAndRun(event, onLocationPress)}
-          style={styles.locationRow}
+          onPress={onLocationPress}
+          style={({ pressed }) => [styles.locationRow, pressed && styles.pressed]}
         >
           <Ionicons color={colors.primary} name="location" size={16} />
           <Text style={styles.locationText}>{locationLabel}</Text>
         </Pressable>
 
-        <FoliageStatusBadge compact foliage={foliage} />
-        <Text numberOfLines={3} style={styles.description}>
-          {destination.description}
-        </Text>
+        <Pressable
+          accessibilityHint="Opens destination details"
+          accessibilityLabel={`Open ${destination.name} details`}
+          accessibilityRole="button"
+          onPress={onPress}
+          style={({ pressed }) => [styles.summaryButton, pressed && styles.pressed]}
+        >
+          <FoliageStatusBadge compact foliage={foliage} />
+          <Text numberOfLines={3} style={styles.description}>
+            {destination.description}
+          </Text>
+        </Pressable>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -126,8 +131,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.xs,
   },
-  title: {
+  titleButton: {
+    minWidth: 0,
     flex: 1,
+  },
+  title: {
     color: colors.text,
     fontSize: type.body,
     fontWeight: '800',
@@ -153,6 +161,9 @@ const styles = StyleSheet.create({
     fontSize: type.label,
     fontWeight: '700',
     textDecorationLine: 'underline',
+  },
+  summaryButton: {
+    gap: spacing.xs,
   },
   description: {
     color: colors.textMuted,
