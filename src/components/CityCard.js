@@ -1,3 +1,4 @@
+import { colors } from '../theme/tokens';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function CityCard({ city, isFavorite, onOpen, onToggleFavorite }) {
@@ -35,18 +36,18 @@ export default function CityCard({ city, isFavorite, onOpen, onToggleFavorite })
 }
 
 const styles = StyleSheet.create({
-  cityCard: { backgroundColor: '#f7f9fd', borderRadius: 22, marginBottom: 12, padding: 18 },
+  cityCard: { backgroundColor: colors.surface, borderRadius: 22, marginBottom: 12, padding: 18 },
   cardHeader: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between' },
-  cityName: { color: '#102f57', fontSize: 19, fontWeight: '800' },
-  country: { color: '#6680a1', fontSize: 12, marginTop: 2 },
+  cityName: { color: colors.cardTitle, fontSize: 19, fontWeight: '800' },
+  country: { color: colors.metricLabel, fontSize: 12, marginTop: 2 },
   favoriteButton: { marginTop: -4, padding: 4 },
-  favoriteIcon: { color: '#8fa6c4', fontSize: 28 },
-  favoriteIconActive: { color: '#e55d7a' },
+  favoriteIcon: { color: colors.inactiveFavorite, fontSize: 28 },
+  favoriteIconActive: { color: colors.danger },
   weatherRow: { alignItems: 'center', flexDirection: 'row', marginTop: 14 },
   weatherIcon: { fontSize: 36, marginRight: 10 },
   temperatureBlock: { flex: 1 },
-  temperature: { color: '#173b69', fontSize: 30, fontWeight: '300', letterSpacing: -1.2, lineHeight: 33 },
-  condition: { color: '#6680a1', fontSize: 12 },
+  temperature: { color: colors.text, fontSize: 30, fontWeight: '300', letterSpacing: -1.2, lineHeight: 33 },
+  condition: { color: colors.metricLabel, fontSize: 12 },
   rangeBlock: { alignItems: 'flex-end' },
-  range: { color: '#6680a1', fontSize: 12, marginVertical: 1 },
+  range: { color: colors.metricLabel, fontSize: 12, marginVertical: 1 },
 });
