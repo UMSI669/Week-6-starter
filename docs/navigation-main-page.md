@@ -2,7 +2,7 @@
 
 ## Navigation
 
-- React Navigation bottom tabs: `Pokémon` and `My Team`.
+- React Navigation bottom tabs: `Home` and `My team`.
 - A native stack wraps those tabs and exposes `PokemonDetails` above them.
 - Selecting a card navigates with `navigation.navigate('PokemonDetails', { pokemonId: pokemon.id })`.
 - The details route receives a numeric Pokédex ID in `route.params.pokemonId`. Fetch the record through TanStack Query using `['pokemon', pokemonId]`; do not pass API records in route params.
@@ -11,6 +11,7 @@
 
 - The initial gallery stores only `[1, 4, 7, 25, 133]` in local screen state.
 - Successful lookups are added by ID after the user selects “Add to Pokédex”. That gallery collection is independent of team membership.
+- Search lookup is debounced by 350 ms while the user types; the Lookup button also runs the current query immediately.
 - PokéAPI records are fetched and cached with TanStack Query. PokéAPI is keyless and requires no environment variable.
 
 ## Shared team state

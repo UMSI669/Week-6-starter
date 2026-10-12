@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Keyboard, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import PokemonCard from '../components/PokemonCard';
+import PokeballIcon from '../components/PokeballIcon';
 import TypePill from '../components/TypePill';
 import { fetchPokemon, formatPokemonId, getPokemonArtwork, getPokemonSprite } from '../api/pokemonApi';
 import { MAX_TEAM_SIZE, useTeamStore } from '../store/teamStore';
@@ -57,6 +58,8 @@ export default function DiscoverScreen({ navigation }) {
   const [typeFilter, setTypeFilter] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
   const [sortAscending, setSortAscending] = useState(true);
+  const requestGeneration = useRef(0);
+  const debounceTimer = useRef(null);
   const queryClient = useQueryClient();
   const teamIds = useTeamStore((state) => state.teamIds);
   const addPokemon = useTeamStore((state) => state.addPokemon);
@@ -70,9 +73,66 @@ export default function DiscoverScreen({ navigation }) {
   const visiblePokemon = successfulPokemon
     .filter((pokemon) => typeFilter === 'All' || pokemon.types.some(({ type }) => type.name === typeFilter))
     .sort((a, b) => sortAscending ? a.id - b.id : b.id - a.id);
+  const galleryItems = visiblePokemon.length % 2 === 1
+    ? [...visiblePokemon, { id: 'gallery-spacer', isGridSpacer: true }]
+    : visiblePokemon;
   const teamFull = teamIds.length >= MAX_TEAM_SIZE;
 
-  async function submitLookup() {
+  useEffect(() => {
+    if (!searchMessage) return undefined;
+    const timer = setTimeout(() => setSearchMessage(''), 3000);
+    return () => clearTimeout(timer);
+  }, [searchMessage]);
+
+  const lookupByName = useCallback(async (normalizedName, requestId) => {
+    setIsSearching(true);
+    setSearchError('');
+    setSearchCanRetry(false);
+    try {
+      const pokemon = await queryClient.fetchQuery({
+        queryKey: ['pokemon', normalizedName],
+        queryFn: () => fetchPokemon(normalizedName),
+      });
+      if (requestGeneration.current !== requestId) return;
+      setLookupPokemon(pokemon);
+    } catch (error) {
+      if (requestGeneration.current !== requestId) return;
+      setSearchCanRetry(error.status !== 404);
+      setSearchError(error.status === 404
+        ? 'No Pokémon found. Check the name or number and try again.'
+        : error.message || 'Could not reach PokéAPI. Check your connection and retry.');
+    } finally {
+      if (requestGeneration.current === requestId) setIsSearching(false);
+    }
+  }, [queryClient]);
+
+  useEffect(() => {
+    const normalizedName = searchText.trim().toLowerCase();
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    const requestId = ++requestGeneration.current;
+
+    if (!normalizedName) {
+      setLookupPokemon(null);
+      setSearchError('');
+      setSearchCanRetry(false);
+      setIsSearching(false);
+      return undefined;
+    }
+
+    setLookupPokemon(null);
+    setSearchError('');
+    setSearchMessage('');
+    setSearchCanRetry(false);
+    setIsSearching(false);
+    debounceTimer.current = setTimeout(() => lookupByName(normalizedName, requestId), 350);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      if (requestGeneration.current === requestId) requestGeneration.current += 1;
+    };
+  }, [searchText, lookupByName]);
+
+  function submitLookup() {
     const normalizedName = searchText.trim().toLowerCase();
     if (!normalizedName) {
       setSearchError('Enter a Pokémon name or Pokédex number to search.');
@@ -81,28 +141,20 @@ export default function DiscoverScreen({ navigation }) {
     }
 
     Keyboard.dismiss();
-    setIsSearching(true);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    const requestId = ++requestGeneration.current;
+    lookupByName(normalizedName, requestId);
+  }
+
+  function handleSearchChange(value) {
+    requestGeneration.current += 1;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    setSearchText(value);
+    setLookupPokemon(null);
     setSearchError('');
     setSearchCanRetry(false);
     setSearchMessage('');
-    setLookupPokemon(null);
-    try {
-      const pokemon = await queryClient.fetchQuery({
-        queryKey: ['pokemon', normalizedName],
-        queryFn: () => fetchPokemon(normalizedName),
-      });
-      if (collectionIds.includes(pokemon.id)) {
-        setSearchMessage(`${pokemon.name} is already in your gallery.`);
-      }
-      setLookupPokemon(pokemon);
-    } catch (error) {
-      setSearchCanRetry(error.status !== 404);
-      setSearchError(error.status === 404
-        ? 'No Pokémon found. Check the name or number and try again.'
-        : error.message || 'Could not reach PokéAPI. Check your connection and retry.');
-    } finally {
-      setIsSearching(false);
-    }
+    setIsSearching(false);
   }
 
   function addLookupToCollection() {
@@ -142,7 +194,7 @@ export default function DiscoverScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={visiblePokemon}
+        data={galleryItems}
         numColumns={2}
         keyExtractor={(pokemon) => String(pokemon.id)}
         columnWrapperStyle={styles.gridRow}
@@ -151,7 +203,7 @@ export default function DiscoverScreen({ navigation }) {
         ListHeaderComponent={(
           <View>
             <View style={styles.brandRow}>
-              <View style={styles.brandMark}><Text style={styles.brandMarkText}>•</Text></View>
+              <View style={styles.brandMark}><PokeballIcon active size={19} /></View>
               <Text style={styles.brandText}>POKÉ GUIDE</Text>
               <View style={styles.regionTag}><Text style={styles.regionText}>KANTO</Text></View>
             </View>
@@ -163,7 +215,7 @@ export default function DiscoverScreen({ navigation }) {
             <View style={styles.searchRow}>
               <TextInput
                 value={searchText}
-                onChangeText={(value) => { setSearchText(value); setSearchError(''); setSearchCanRetry(false); setSearchMessage(''); }}
+                onChangeText={handleSearchChange}
                 onSubmitEditing={submitLookup}
                 placeholder="Name or Pokédex number"
                 placeholderTextColor={colors.muted}
@@ -177,7 +229,6 @@ export default function DiscoverScreen({ navigation }) {
               </Pressable>
             </View>
             {!!searchError && <View style={styles.inlineError}><Text accessibilityRole="alert" style={[styles.errorText, styles.searchError]}>{searchError}</Text>{searchCanRetry && <Pressable onPress={submitLookup} accessibilityRole="button"><Text style={styles.retryText}>Retry</Text></Pressable>}</View>}
-            {!!searchMessage && !lookupPokemon && <Text accessibilityRole="alert" style={styles.messageText}>{searchMessage}</Text>}
             {isSearching && <View style={styles.lookupLoading}><ActivityIndicator color={colors.red} /><Text style={styles.loadingText}>Looking up Pokémon…</Text></View>}
             {lookupPokemon && <SearchResult pokemon={lookupPokemon} onAdd={addLookupToCollection} onCancel={() => { setLookupPokemon(null); setSearchMessage(''); }} alreadyAdded={collectionIds.includes(lookupPokemon.id)} teamIds={teamIds} />}
 
@@ -210,7 +261,9 @@ export default function DiscoverScreen({ navigation }) {
             {visiblePokemon.length === 0 && !loadingCount && !failedCount && <View style={styles.emptyState}><Text style={styles.emptyTitle}>No Pokémon in this view</Text><Text style={styles.emptyBody}>Try another type filter or look up a Pokémon by name.</Text></View>}
           </View>
         )}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => item.isGridSpacer ? (
+          <View style={styles.gridSpacer} accessible={false} />
+        ) : (
           <PokemonCard
             pokemon={item}
             onPress={() => openPokemonDetails(item.id)}
@@ -221,12 +274,23 @@ export default function DiscoverScreen({ navigation }) {
         )}
         ListFooterComponent={(
           <View style={styles.footer}>
-            <View style={styles.footerBall}><Text style={styles.footerBallText}>•</Text></View>
+            <View style={styles.footerBall}><PokeballIcon active size={16} /></View>
             <Text style={styles.footerText}>Red Poké Ball = on your team</Text>
             <Text style={styles.footerCount}>My Team: {teamIds.length} / {MAX_TEAM_SIZE}</Text>
           </View>
         )}
       />
+      {!!searchMessage && (
+        <View pointerEvents="box-none" style={styles.toastLayer}>
+          <View style={styles.toast} accessibilityRole="alert" accessibilityLiveRegion="polite">
+            <PokeballIcon active size={18} />
+            <Text style={styles.toastText}>{searchMessage}</Text>
+            <Pressable onPress={() => setSearchMessage('')} accessibilityRole="button" accessibilityLabel="Dismiss notification" style={styles.toastDismiss}>
+              <Text style={styles.toastDismissText}>×</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -235,8 +299,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 18 },
   brandRow: { height: 30, flexDirection: 'row', alignItems: 'center', marginBottom: 7 },
-  brandMark: { width: 19, height: 19, borderRadius: 10, backgroundColor: colors.red, borderWidth: 1, borderColor: '#D63A42', alignItems: 'center', justifyContent: 'center', marginRight: 7 },
-  brandMarkText: { color: '#fff', fontSize: 14, lineHeight: 15, fontWeight: '800' },
+  brandMark: { width: 19, height: 19, marginRight: 7 },
   brandText: { color: colors.ink, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
   regionTag: { marginLeft: 'auto', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface },
   regionText: { color: colors.muted, fontSize: 10, fontWeight: '700' },
@@ -250,7 +313,6 @@ const styles = StyleSheet.create({
   lookupText: { color: '#fff', fontWeight: '700', fontSize: 12 },
   errorText: { color: '#B43138', fontSize: 12, lineHeight: 17, marginTop: 4 },
   searchError: { flex: 1, marginRight: 8 },
-  messageText: { color: colors.ink, fontSize: 12, marginTop: 4 },
   lookupLoading: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 9 },
   loadingText: { color: colors.muted, fontSize: 12, marginTop: 8 },
   resultCard: { marginTop: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 17, backgroundColor: colors.surface, overflow: 'hidden' },
@@ -293,14 +355,19 @@ const styles = StyleSheet.create({
   gallerySummary: { color: colors.ink, fontSize: 12, fontWeight: '700' },
   sortText: { color: colors.muted, fontSize: 10 },
   gridRow: { gap: 12, alignItems: 'stretch' },
+  gridSpacer: { flex: 1, minHeight: 218, marginBottom: 12 },
   inlineError: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   retryText: { color: colors.red, fontSize: 12, fontWeight: '700' },
   emptyState: { padding: 20, marginBottom: 12, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.line, alignItems: 'center' },
   emptyTitle: { color: colors.ink, fontWeight: '700', fontSize: 14 },
   emptyBody: { color: colors.muted, textAlign: 'center', fontSize: 12, lineHeight: 17, marginTop: 5 },
   footer: { minHeight: 50, borderTopWidth: 1, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8, paddingTop: 8 },
-  footerBall: { backgroundColor: colors.red, width: 16, height: 16, borderRadius: 9, borderWidth: 1, borderColor: '#D63A42', alignItems: 'center', justifyContent: 'center', marginRight: 6 },
-  footerBallText: { color: '#fff', fontSize: 12, lineHeight: 13, fontWeight: '800' },
+  footerBall: { marginRight: 6 },
   footerText: { color: colors.muted, fontSize: 10 },
   footerCount: { color: colors.muted, fontSize: 10, marginLeft: 8 },
+  toastLayer: { position: 'absolute', left: 0, right: 0, bottom: 10, zIndex: 10, alignItems: 'center', paddingHorizontal: 18 },
+  toast: { width: '100%', minHeight: 44, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 14, borderWidth: 1, borderColor: '#F5D9DA', backgroundColor: '#FFF7F7', shadowColor: '#1D2738', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  toastText: { flex: 1, color: colors.ink, fontSize: 12, fontWeight: '600', marginLeft: 9, marginRight: 6 },
+  toastDismiss: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  toastDismissText: { color: colors.muted, fontSize: 20, lineHeight: 22 },
 });

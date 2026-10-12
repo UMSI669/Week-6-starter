@@ -18,7 +18,7 @@ export default function MyTeamScreen({ navigation }) {
         {teamIds.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.body}>Your team is empty.</Text>
-            <Pressable onPress={() => navigation.navigate('Pokémon')}><Text style={styles.link}>Browse Pokémon →</Text></Pressable>
+            <Pressable onPress={() => navigation.navigate('Home')}><Text style={styles.link}>Browse Pokémon →</Text></Pressable>
           </View>
         ) : (
           <View style={styles.empty}>

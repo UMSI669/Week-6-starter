@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatPokemonId, getPokemonArtwork, getPokemonSprite } from '../api/pokemonApi';
-import { colors } from '../theme/colors';
+import { colors, typeColors } from '../theme/colors';
+import PokeballIcon from './PokeballIcon';
 import TypePill from './TypePill';
 
 export default function PokemonCard({ pokemon, onPress, onToggleTeam, onTeam, teamFull }) {
@@ -11,6 +12,7 @@ export default function PokemonCard({ pokemon, onPress, onToggleTeam, onTeam, te
   const sprite = getPokemonSprite(pokemon);
   const imageUri = !artworkFailed && artwork ? artwork : (!spriteFailed ? sprite : null);
   const typeNames = (pokemon.types || []).map(({ type }) => type.name);
+  const [panelBackground, idColor] = typeColors[typeNames[0]] || [colors.warm, '#B84F26'];
 
   return (
     <View style={styles.card}>
@@ -20,14 +22,15 @@ export default function PokemonCard({ pokemon, onPress, onToggleTeam, onTeam, te
         accessibilityLabel={`View ${pokemon.name}, Pokédex number ${pokemon.id}`}
         style={styles.detailsPressable}
       >
-        <View style={styles.artworkArea}>
-          <Text style={styles.pokemonId}>{formatPokemonId(pokemon.id)}</Text>
+        <View style={[styles.artworkArea, { backgroundColor: panelBackground }]}>
+          <View style={styles.artworkHalo} />
+          <Text style={[styles.pokemonId, { color: idColor }]}>{formatPokemonId(pokemon.id)}</Text>
           {imageUri ? (
             <Image
               source={{ uri: imageUri }}
               style={styles.artwork}
               resizeMode="contain"
-              onError={() => (artworkFailed ? setSpriteFailed(true) : setArtworkFailed(true))}
+              onError={() => (artwork && !artworkFailed ? setArtworkFailed(true) : setSpriteFailed(true))}
               accessibilityLabel={`${pokemon.name} artwork`}
             />
           ) : (
@@ -50,20 +53,19 @@ export default function PokemonCard({ pokemon, onPress, onToggleTeam, onTeam, te
         accessibilityRole="button"
         accessibilityState={{ selected: onTeam, disabled: !onTeam && teamFull }}
         accessibilityLabel={onTeam ? `Remove ${pokemon.name} from My Team` : teamFull ? 'My Team is full' : `Add ${pokemon.name} to My Team`}
-        style={[styles.teamToggle, onTeam && styles.teamSelected, !onTeam && teamFull && styles.teamDisabled]}
+        style={[styles.teamButton, !onTeam && teamFull && styles.teamDisabled]}
       >
-        <Text style={[styles.teamToggleText, onTeam && styles.teamToggleSelectedText]}>
-          {onTeam ? '✓ On team' : teamFull ? 'Team full' : '+ Add to team'}
-        </Text>
+        <PokeballIcon active={onTeam} size={22} />
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, marginBottom: 12, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
+  card: { flex: 1, marginBottom: 12, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, overflow: 'hidden', position: 'relative' },
   detailsPressable: { flex: 1 },
-  artworkArea: { height: 136, backgroundColor: colors.warm, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  artworkArea: { height: 136, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  artworkHalo: { width: 94, height: 94, borderRadius: 48, backgroundColor: 'rgba(255,255,255,0.48)', position: 'absolute' },
   pokemonId: { position: 'absolute', top: 11, left: 11, color: '#B84F26', fontSize: 11, fontWeight: '700' },
   artwork: { width: '76%', height: '86%' },
   imageFallback: { alignItems: 'center', justifyContent: 'center' },
@@ -72,9 +74,6 @@ const styles = StyleSheet.create({
   cardBody: { paddingHorizontal: 12, paddingTop: 9, paddingBottom: 8 },
   name: { color: colors.ink, fontSize: 16, fontWeight: '700', textTransform: 'capitalize', marginBottom: 7 },
   types: { flexDirection: 'row', minHeight: 25 },
-  teamToggle: { marginHorizontal: 10, marginBottom: 10, minHeight: 34, borderRadius: 10, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  teamSelected: { backgroundColor: colors.redWash, borderColor: colors.redWash },
-  teamDisabled: { backgroundColor: '#F1F2F4' },
-  teamToggleText: { color: colors.ink, fontSize: 12, fontWeight: '700' },
-  teamToggleSelectedText: { color: colors.red },
+  teamButton: { position: 'absolute', top: 8, right: 8, width: 34, height: 34, borderRadius: 17, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', zIndex: 2 },
+  teamDisabled: { opacity: 0.62 },
 });
