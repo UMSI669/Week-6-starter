@@ -1,4 +1,4 @@
- Pokémon Team Builder
+## App: Pokémon Team Builder
 
 ## Purpose
 
