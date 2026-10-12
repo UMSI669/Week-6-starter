@@ -45,7 +45,7 @@ export function useTypePokemon(type: string) {
   return useQuery({ queryKey: queryKeys.type(type), queryFn: ({ signal }) => getTypePokemon(type, signal), enabled: !!type, staleTime: DAY, gcTime: 7 * DAY });
 }
 
-//QJ Comment: We are using TanStack useQuery Explain why TanStack Query owns fetching, errors, deduplication, and cached detail objects.
+//QJ Comment: We are using TanStack useQuery to fetch the data
 export function usePokemonDetails(id: number) {
   return useQuery({ queryKey: queryKeys.detail(id), queryFn: ({ signal }) => getPokemonDetail(id, signal), enabled: id > 0, staleTime: DAY, gcTime: 7 * DAY, retry: 1 });
 }
