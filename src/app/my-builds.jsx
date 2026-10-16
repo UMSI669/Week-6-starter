@@ -51,6 +51,8 @@ export default function MyBuildsScreen() {
             <Text style={styles.info}>{item.game}</Text>
             <Text style={styles.info}>{item.type}</Text>
             <Text style={styles.info}>{item.weapon}</Text>
+            <Text style={styles.info}>{item.Pokemon}</Text>
+
 
             {item.stats && (
             <View style={{ marginTop: 12 }}>

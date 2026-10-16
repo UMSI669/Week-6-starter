@@ -6,5 +6,5 @@
     "noEmit": true,
     "strict": false
   },
-  "include": ["index.js", "src/**/*.js", "src/**/*.jsx", "hooks/**/*.jsx"]
+  "include": ["index.js", "src/**/*.js", "src/**/*.jsx", "src/**/*.d.ts", "hooks/**/*.jsx"]
 }

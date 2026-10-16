@@ -1,7 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
+  Animated,
   Text,
   ScrollView,
   TextInput,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import BuildCard from "../api/app/components/BuildCard";
 import GameCard from "../components/GameCard";
@@ -28,6 +30,31 @@ export default function HomeScreen() {
   // Shared client state managed by Zustand.
   const addBuild = useBuildStore((state) => state.addBuild);
   const savedBuilds = useBuildStore((state) => state.savedBuilds);
+
+
+  const [headerOffset] = useState(() => new Animated.Value(0));
+  const previousScroll = useRef(0);
+  const headerVisible = useRef(true);
+  const [headerHeight, setHeaderHeight] = useState(90);
+
+  useEffect(() => () => headerOffset.stopAnimation(), [headerOffset]);
+
+  const handleScroll = (event) => {
+    const offset = Math.max(0, event.nativeEvent.contentOffset.y);
+    const delta = offset - previousScroll.current;
+
+      if (Math.abs(delta) < 4 && offset > 10) return;
+        const visible = offset <= 10 || delta < 0;
+        previousScroll.current = offset;
+
+        if (visible === headerVisible.current) return;
+          headerVisible.current = visible;
+            Animated.timing(headerOffset, {
+              toValue: visible ? 0 : -headerHeight - 50,
+              duration: 200,
+              useNativeDriver: true,
+    }).start();
+  };
 
   // Server state managed by TanStack Query.
   const {
@@ -54,12 +81,17 @@ export default function HomeScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+    <View style={styles.container}>
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: headerHeight + 20 }]}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      automaticallyAdjustContentInsets={false}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.header}>SoulsBuild</Text>
+
 
       <Text style={styles.subtitle}>
         Discover, create, and customize RPG builds.
@@ -185,6 +217,14 @@ export default function HomeScreen() {
         </>
       )}
     </ScrollView>
+    <Animated.View
+      onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+      style={[styles.fixedHeader, { transform: [{ translateY: headerOffset }] }]}
+    >
+      <Text style={styles.header} adjustsFontSizeToFit numberOfLines={1}>SOULSBUILD</Text>
+    </Animated.View>
+    </View>
+    </SafeAreaView>
   );
 }
 
@@ -199,14 +239,16 @@ const styles = StyleSheet.create({
   },
   header: {
     color: "#FFFFFF",
-    fontSize: 32,
+    fontSize: 60,
     fontWeight: "bold",
-    marginTop: 20,
+    fontFamily: "CaslonAntique-Bold",
+    textAlign: "center",
   },
   subtitle: {
     color: "#AAAAAA",
     marginTop: 6,
     marginBottom: 20,
+    textAlign: "center"
   },
   navigation: {
     flexDirection: "row",
@@ -232,12 +274,12 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    backgroundColor: "#333333",
+    backgroundColor: "#434141",
     padding: 14,
     borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: "#8B0000",
+    backgroundColor: "#938507",
   },
   search: {
     backgroundColor: "#242424",
@@ -266,5 +308,15 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     marginTop: 16,
+  },
+  fixedHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "#121212",
   },
 });
