@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import MyTeamScreen from '../screens/MyTeamScreen';
-import PokemonDetailsPlaceholder from '../screens/PokemonDetailsPlaceholder';
+import PokemonDetailsScreen from '../screens/PokemonDetailsScreen';
 import PokeballIcon from '../components/PokeballIcon';
 import { useTeamStore } from '../store/teamStore';
 import { colors } from '../theme/colors';
@@ -71,7 +71,7 @@ export default function AppNavigator() {
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen
         name="PokemonDetails"
-        component={PokemonDetailsPlaceholder}
+        component={PokemonDetailsScreen}
         options={{ title: '', headerBackTitle: 'Back', headerShadowVisible: false, headerStyle: { backgroundColor: colors.background }, contentStyle: { backgroundColor: colors.background } }}
       />
     </Stack.Navigator>
