@@ -9,7 +9,7 @@ The application will display character builds as interactive cards containing in
 
 - TanStack Query: manages external API requests, caching, loading states, and error handling.
 
-### un
+### Run:
 - npm install
 - npx expo start
 <br>
