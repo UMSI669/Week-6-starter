@@ -8,6 +8,10 @@ The application will display character builds as interactive cards containing in
 - Zustand: manages user created data, including saved builds and customizations.
 
 - TanStack Query: manages external API requests, caching, loading states, and error handling.
+
+###Run
+- npm install
+- npx expo start
 <br>
 <br>
 <br>
