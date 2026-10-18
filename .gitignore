@@ -8,6 +8,7 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.env
 
 # Native
 .kotlin/
@@ -30,12 +31,8 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# Ignore every .env file and variant
-.env
-.env.*
-
-# Keep the example configuration tracked
-!.env.example
+# local env files
+.env*.local
 
 # typescript
 *.tsbuildinfo
